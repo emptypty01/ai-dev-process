@@ -1,0 +1,11 @@
+[mcp_servers.gitlab_local]
+command = "python"
+args = ["-u", "scripts/gitlab_mcp.py"]
+startup_timeout_sec = 30
+tool_timeout_sec = 60
+
+[mcp_servers.penpot_design]
+command = "python"
+args = ["-u", "scripts/penpot_mcp.py"]
+startup_timeout_sec = 30
+tool_timeout_sec = 180

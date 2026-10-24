@@ -1,0 +1,56 @@
+{
+  "repository": "https://github.com/mattpocock/skills",
+  "commit": "5beb35b040e3de97e54fa9e386d7e42d15c295c2",
+  "adapted_on": "2026-10-24",
+  "skills": [
+    {
+      "name": "code-review",
+      "upstream_sha256": "09eb147f793e4647949edd32dbad278f0554dfb56e0d46b699cd4c2c55bf0357",
+      "installed_sha256": "6e9fb96a08fd4dedbb7d09bf0975cbfe1d0bb679b6edb24a869c54fa80695cc2",
+      "adapted": true
+    },
+    {
+      "name": "codebase-design",
+      "upstream_sha256": "2c20617f87ec8af6a434859f381b2f061a69b530444e74eb39e78bb016a6d1e2",
+      "installed_sha256": "2c20617f87ec8af6a434859f381b2f061a69b530444e74eb39e78bb016a6d1e2",
+      "adapted": false
+    },
+    {
+      "name": "grill-me",
+      "upstream_sha256": "caaf8b8de1684f96e26b28f3c29189db5c89cce4b73e1c93d86164f66ef88637",
+      "installed_sha256": "e6a2119cc8a42a49672f614a7528406311a094977617e329cc1aa1ac08e6c55a",
+      "adapted": true
+    },
+    {
+      "name": "grilling",
+      "upstream_sha256": "befdff1e27a1dfe2a294d5871169ac1afe16d983911daa4f32627514a48c1e15",
+      "installed_sha256": "befdff1e27a1dfe2a294d5871169ac1afe16d983911daa4f32627514a48c1e15",
+      "adapted": false
+    },
+    {
+      "name": "implement",
+      "upstream_sha256": "483bdc4ccf4ac31d86ac7beeaa0d0db80313e71e120bb8c59b3196ae5decd53d",
+      "installed_sha256": "6f042d5a5850776d5fd47cc18a4aa64539264e9f3108863fd44c86549c077017",
+      "adapted": true
+    },
+    {
+      "name": "tdd",
+      "upstream_sha256": "5505d25bbaa8fc14a79e4d20163936958992a2995b7f1dd1d6197edc9ed722e0",
+      "installed_sha256": "5505d25bbaa8fc14a79e4d20163936958992a2995b7f1dd1d6197edc9ed722e0",
+      "adapted": false
+    },
+    {
+      "name": "to-spec",
+      "upstream_sha256": "43ad9cf318e5e7d3d1fa360253a37021796dc87a0c2e595ad262661a10f85088",
+      "installed_sha256": "a1a23e86ef852e5e8e208aa06427d588480500f4c4e80e34399cd1fc7e0fd105",
+      "adapted": true
+    },
+    {
+      "name": "to-tickets",
+      "upstream_sha256": "56ec23c5b2782785d4e65bff9e315b6d3aeb4ef977c174a219e99489fada1995",
+      "installed_sha256": "31828cbef3788dd581daabc7f060451f4326ee6a93c9595e8096cc412462e0fe",
+      "adapted": true
+    }
+  ],
+  "notes": "将 Claude 风格 disable-model-invocation 移出 frontmatter；沿用 agents/openai.yaml 的显式调用策略。"
+}

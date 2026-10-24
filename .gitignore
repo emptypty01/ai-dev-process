@@ -1,0 +1,13 @@
+**/target/
+**/node_modules/
+**/dist/
+.env
+.env.*
+!.env.example
+.local/
+.playwright-cli/
+*.log
+**/__pycache__/
+/handoff-report.json
+.idea/
+.vscode/
