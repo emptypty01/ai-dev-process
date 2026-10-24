@@ -27,6 +27,7 @@ def main():
     assert order["totalAmount"] == Decimal("59.70") and order["status"] == "NEW"
     call("/orders", "POST", {"itemName": " ", "quantity": 1, "unitPrice": "1.00"}, 400)
     call("/orders", "POST", {"itemName": "非法数量", "quantity": 0, "unitPrice": "1.00"}, 400)
+    call("/orders", "POST", {"itemName": "小数数量", "quantity": 1.5, "unitPrice": "1.00"}, 400)
     call("/orders", "POST", {"itemName": "非法金额", "quantity": 1, "unitPrice": "1.001"}, 400)
     assert any(item["id"] == order["id"] for item in call("/orders"))
     first = call(f"/orders/{order['id']}/cancel", "POST")
@@ -37,7 +38,7 @@ def main():
     with ThreadPoolExecutor(max_workers=8) as pool:
         results = list(pool.map(lambda _: call(f"/orders/{concurrent['id']}/cancel", "POST"), range(8)))
     assert all(item == results[0] and item["status"] == "CANCELLED" for item in results)
-    print(json.dumps({"result": "passed", "checks": 10, "order_id": order["id"],
+    print(json.dumps({"result": "passed", "checks": 11, "order_id": order["id"],
                       "amount": str(order["totalAmount"]), "note": "演示订单已取消并保留"}, ensure_ascii=False))
 
 

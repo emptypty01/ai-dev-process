@@ -2,7 +2,7 @@
 
 ## 示例需求
 
-- 后端行为：`mvn -f backend/pom.xml -B -ntp -Dtest=OrderServiceTest test`，指定 7 个行为用例。
+- 后端行为：`mvn -f backend/pom.xml -B -ntp -Dtest=OrderServiceTest,OrderRequestTest test`，指定服务行为和请求边界共 9 个用例。
 - 后端制品：`mvn -f backend/pom.xml -B -ntp -DskipTests package`，仅构建，不把跳过测试记为通过。
 - 前端：`npm ci --no-audit --no-fund` 后 `npm run build`；另行定向浏览器验证创建、取消及空状态。
 - 真实 MySQL：应用启动后运行 `python scripts/smoke_orders.py`，该脚本创建并取消一笔演示订单，保留记录。

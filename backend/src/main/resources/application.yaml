@@ -14,3 +14,5 @@ spring:
     enabled: true
   jackson:
     time-zone: UTC
+    deserialization:
+      accept-float-as-int: false
