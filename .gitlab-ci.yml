@@ -1,0 +1,91 @@
+workflow:
+  rules:
+    - if: '$CI_PIPELINE_SOURCE == "merge_request_event"'
+    - if: '$CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH'
+
+stages: [handoff, verify, build, deploy]
+
+default:
+  tags: [local-docker]
+  interruptible: true
+
+handoff:
+  stage: handoff
+  image: python:3.12-slim
+  script:
+    - python scripts/check_handoff.py
+  artifacts:
+    when: always
+    paths: [handoff-report.json]
+    expire_in: 30 days
+
+backend-targeted:
+  stage: verify
+  image: maven:3.9.16-eclipse-temurin-21
+  variables:
+    MAVEN_OPTS: '-Dmaven.repo.local=$CI_PROJECT_DIR/.m2/repository -Xmx512m'
+  cache:
+    key: maven-java21
+    paths: [.m2/repository]
+  script:
+    - mvn -f backend/pom.xml -B -ntp -Dtest=OrderServiceTest test
+  artifacts:
+    when: always
+    reports:
+      junit: backend/target/surefire-reports/TEST-*.xml
+    paths: [backend/target/surefire-reports/]
+    expire_in: 30 days
+
+frontend-build:
+  stage: verify
+  image: node:24.21.0-bookworm-slim
+  script:
+    - cd frontend
+    - npm ci --no-audit --no-fund
+    - npm run build
+  artifacts:
+    paths: [frontend/dist/]
+    expire_in: 30 days
+
+backend-package:
+  stage: build
+  image: maven:3.9.16-eclipse-temurin-21
+  variables:
+    MAVEN_OPTS: '-Dmaven.repo.local=$CI_PROJECT_DIR/.m2/repository -Xmx512m'
+  cache:
+    key: maven-java21
+    paths: [.m2/repository]
+  script:
+    - mvn -f backend/pom.xml -B -ntp -DskipTests package
+    - printf '%s\n' "$CI_COMMIT_SHA" > backend/target/commit-sha.txt
+  artifacts:
+    paths:
+      - backend/target/order-demo-*.jar
+      - backend/target/commit-sha.txt
+    expire_in: 30 days
+
+deploy-local:
+  stage: deploy
+  image: docker:29.4.0-cli
+  tags: [local-deploy]
+  interruptible: false
+  resource_group: local-demo
+  needs:
+    - job: backend-package
+      artifacts: true
+    - job: frontend-build
+      artifacts: true
+  variables:
+    APP_VERSION: $CI_COMMIT_SHA
+  script:
+    - docker build -f backend/Dockerfile -t local/ai-order-backend:$APP_VERSION .
+    - docker build -f frontend/Dockerfile -t local/ai-order-frontend:$APP_VERSION .
+    - docker compose -f deploy/compose.yaml up -d
+    - docker run --rm --network ai-dev-platform-net curlimages/curl:8.18.0 --retry 20 --retry-connrefused --retry-delay 3 --fail http://ai-order-backend:8080/api/health
+  environment:
+    name: local-demo
+    url: http://localhost:5174
+  rules:
+    - if: '$CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH && $CI_COMMIT_REF_PROTECTED == "true"'
+      when: manual
+      allow_failure: false

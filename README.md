@@ -53,7 +53,7 @@ Penpot 只读检查使用 `read_current_design`，执行固定的查询；通用
 - MR 与默认分支运行：交接检查、`OrderServiceTest`、Vue 构建、Java 打包。
 - 默认受保护分支的 `deploy-local` 必须人工触发，部署 `http://localhost:5174`。
 - 普通验证与发布使用不同 Runner；发布凭据仅给受保护分支的 `local-demo` 环境。
-- 完成初始化提交后，将主分支配置为禁止直接推送、合并由 Maintainer 处理。GitLab CE Free 的批准记录不构成强制批准规则。
+- 主分支禁止直接推送，合并由 Maintainer 处理。GitLab CE Free 的批准记录不构成强制批准规则。
 - 需求中验收、MR、Pipeline、发布分别记录；不将一次本地通过写成 CI 或业务验收通过。
 - 不自动提交 / 推送，不自动全量回归。
 
