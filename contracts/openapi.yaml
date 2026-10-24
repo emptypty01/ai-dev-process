@@ -1,0 +1,107 @@
+openapi: 3.1.0
+info:
+  title: 订单管理流程示例 API
+  version: 0.1.0
+servers:
+  - url: http://localhost:8081
+  - url: http://localhost:8082
+paths:
+  /api/health:
+    get:
+      summary: 服务存活检查，不代表数据库就绪
+      responses:
+        '200':
+          description: 服务正常
+  /api/orders:
+    get:
+      summary: 按 ID 倒序返回最近 100 笔订单
+      responses:
+        '200':
+          description: 订单列表
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Order'
+    post:
+      summary: 创建订单，总金额由后端精确计算
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [itemName, quantity, unitPrice]
+              properties:
+                itemName:
+                  type: string
+                  minLength: 1
+                  maxLength: 80
+                  description: 不允许空白名称；保存时去除首尾空白
+                quantity:
+                  type: integer
+                  minimum: 1
+                  maximum: 1000
+                unitPrice:
+                  type: number
+                  minimum: 0.01
+                  maximum: 99999999.99
+                  multipleOf: 0.01
+      responses:
+        '201':
+          description: 创建成功
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Order'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+  /api/orders/{id}/cancel:
+    post:
+      summary: NEW 转为 CANCELLED，重复取消返回已有结果
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: integer
+            format: int64
+      responses:
+        '200':
+          description: 已取消，包括重复调用
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Order'
+        '404':
+          description: 订单不存在
+components:
+  responses:
+    BadRequest:
+      description: 参数不符合范围，响应含 message 字段
+  schemas:
+    Order:
+      type: object
+      required: [id, orderNo, itemName, quantity, unitPrice, totalAmount, status, createdAt]
+      properties:
+        id:
+          type: integer
+          format: int64
+        orderNo:
+          type: string
+        itemName:
+          type: string
+        quantity:
+          type: integer
+        unitPrice:
+          type: number
+        totalAmount:
+          type: number
+          description: 数量乘单价，数据库 DECIMAL(16,2)
+        status:
+          type: string
+          enum: [NEW, CANCELLED]
+        createdAt:
+          type: string
+          format: date-time

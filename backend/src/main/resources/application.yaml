@@ -1,0 +1,18 @@
+server:
+  address: ${SERVER_ADDRESS:127.0.0.1}
+  port: ${SERVER_PORT:8081}
+spring:
+  application:
+    name: order-demo
+  datasource:
+    url: ${DB_URL:jdbc:mysql://127.0.0.1:3307/ai_workflow?useUnicode=true&characterEncoding=UTF-8&connectionTimeZone=UTC}
+    username: ${DB_USER:ai_demo}
+    password: ${DB_PASSWORD}
+    hikari:
+      maximum-pool-size: 5
+  flyway:
+    enabled: true
+  jackson:
+    time-zone: UTC
+    deserialization:
+      accept-float-as-int: false

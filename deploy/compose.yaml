@@ -1,0 +1,27 @@
+name: ai-order-demo
+services:
+  order-backend:
+    image: local/ai-order-backend:${APP_VERSION:?required}
+    container_name: ai-order-backend
+    restart: unless-stopped
+    mem_limit: 512m
+    environment:
+      DB_URL: jdbc:mysql://ai-dev-demo-mysql:3306/ai_workflow?connectionTimeZone=UTC
+      DB_USER: ai_demo
+      DB_PASSWORD: ${DB_PASSWORD:?required}
+    ports:
+      - '127.0.0.1:8082:8080'
+    networks: [platform]
+  order-frontend:
+    image: local/ai-order-frontend:${APP_VERSION:?required}
+    container_name: ai-order-frontend
+    restart: unless-stopped
+    mem_limit: 128m
+    depends_on: [order-backend]
+    ports:
+      - '127.0.0.1:5174:80'
+    networks: [platform]
+networks:
+  platform:
+    external: true
+    name: ai-dev-platform-net
