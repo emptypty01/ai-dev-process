@@ -12,10 +12,14 @@ READ_DESIGN_CODE = "return {file: penpot.currentFile.name, page: penpot.currentP
 
 def adapt_response(data, method):
     if method == "initialize" and "result" in data:
-        data["result"]["serverInfo"] = {"name": "local-penpot-design", "version": "1.0.0"}
+        data["result"]["serverInfo"] = {"name": "local-penpot-design", "version": "1.1.0"}
     if method == "tools/list" and "result" in data:
         data["result"].setdefault("tools", []).append({"name": "read_current_design",
             "description": "只读返回当前连接的 Penpot 文件、页面及顶层元素名称。此工具只执行固定的读取代码。",
+            "inputSchema": {"type": "object", "properties": {}, "additionalProperties": False},
+            "annotations": {"readOnlyHint": True, "destructiveHint": False, "idempotentHint": True, "openWorldHint": False}})
+        data["result"]["tools"].append({"name": "read_design_spec",
+            "description": "只读当前页面的原型节点、文案、几何、基础样式和交互摘要，供确认后制定开发计划；返回截断标记。只执行项目内固定查询。",
             "inputSchema": {"type": "object", "properties": {}, "additionalProperties": False},
             "annotations": {"readOnlyHint": True, "destructiveHint": False, "idempotentHint": True, "openWorldHint": False}})
     return data
@@ -29,11 +33,13 @@ def main():
     for line in sys.stdin:
         message = json.loads(line)
         method = message.get("method")
-        if method == "tools/call" and message.get("params", {}).get("name") == "read_current_design":
+        tool_name = message.get("params", {}).get("name")
+        if method == "tools/call" and tool_name in {"read_current_design", "read_design_spec"}:
             if message["params"].get("arguments", {}):
                 print(json.dumps({"jsonrpc": "2.0", "id": message["id"], "error": {"code": -32602, "message": "No arguments accepted"}}), flush=True)
                 continue
-            message["params"] = {"name": "execute_code", "arguments": {"code": READ_DESIGN_CODE}}
+            code = READ_DESIGN_CODE if tool_name == "read_current_design" else Path(__file__).with_name("penpot_design_spec.js").read_text(encoding="utf-8")
+            message["params"] = {"name": "execute_code", "arguments": {"code": code}}
         headers = {"Content-Type": "application/json", "Accept": "application/json, text/event-stream"}
         if session:
             headers["Mcp-Session-Id"] = session

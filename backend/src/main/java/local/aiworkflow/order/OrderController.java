@@ -27,18 +27,23 @@ public class OrderController {
     }
 
     @GetMapping("/orders")
-    public List<OrderItem> list() {
+    public List<OrderSummary> list() {
         return service.list();
     }
 
     @PostMapping("/orders")
     @ResponseStatus(HttpStatus.CREATED)
-    public OrderItem create(@Valid @RequestBody CreateOrderRequest request) {
+    public OrderDetail create(@Valid @RequestBody CreateOrderRequest request) {
         return service.create(request);
     }
 
     @PostMapping("/orders/{id}/cancel")
-    public OrderItem cancel(@PathVariable long id) {
+    public OrderSummary cancel(@PathVariable long id) {
         return service.cancel(id);
+    }
+
+    @GetMapping("/orders/{id}")
+    public OrderDetail detail(@PathVariable long id) {
+        return service.detail(id);
     }
 }

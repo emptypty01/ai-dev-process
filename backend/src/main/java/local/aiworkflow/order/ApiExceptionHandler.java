@@ -13,7 +13,7 @@ import org.springframework.web.server.ResponseStatusException;
 public class ApiExceptionHandler {
     @ExceptionHandler(HttpMessageNotReadableException.class)
     public ResponseEntity<Map<String, String>> handleUnreadable(HttpMessageNotReadableException exception) {
-        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(Map.of("message", "请求格式不正确，请检查商品、整数数量和金额"));
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(Map.of("message", "请求格式不正确；订单请提交items商品ID与整数数量，勿传单价"));
     }
 
     @ExceptionHandler(ResponseStatusException.class)
@@ -23,6 +23,8 @@ public class ApiExceptionHandler {
 
     @ExceptionHandler(MethodArgumentNotValidException.class)
     public ResponseEntity<Map<String, String>> handleValidation(MethodArgumentNotValidException exception) {
-        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(Map.of("message", "请检查商品名称、数量和单价的填写范围"));
+        String message = exception.getBindingResult().getFieldErrors().stream()
+                .map(error -> error.getDefaultMessage()).findFirst().orElse("请求参数不正确");
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(Map.of("message", message));
     }
 }

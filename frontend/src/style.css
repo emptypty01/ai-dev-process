@@ -61,3 +61,51 @@ footer { max-width: 1296px; padding: 8px 28px 30px; margin: 0 auto; color: #6474
 @media (max-width: 1000px) { .workspace-grid { grid-template-columns: minmax(0, 1fr); } .create-panel { max-width: none; } .form-row { grid-template-columns: 1fr 1fr; } }
 @media (max-width: 600px) { main { padding: 28px 16px; } .topbar { padding: 0 16px; } .workspace { display: none; } h1 { font-size: 27px; } .count strong { font-size: 30px; } .count { gap: 5px; } .page-intro p { max-width: 210px; } .panel-heading { padding-left: 16px; padding-right: 16px; } .filters { padding: 0 16px; } td:first-child, th:first-child { padding-left: 16px; } footer { padding-left: 16px; } }
 @media (prefers-reduced-motion: reduce) { button { transition: none; } }
+
+button:disabled { cursor: not-allowed; }
+fieldset { border: 0; padding: 0; margin: 0; min-width: 0; }
+a { color: #184dba; }
+.main-nav { display: flex; gap: 36px; align-self: stretch; align-items: stretch; }
+.main-nav a { display: flex; align-items: center; text-decoration: none; color: #59687b; border-bottom: 3px solid transparent; padding: 0 4px; }
+.main-nav a.active { color: #184dba; border-bottom-color: #184dba; }
+.nav-button { display: inline-block; text-decoration: none; text-align: center; }
+.primary.compact { width: auto; min-width: 132px; }
+.catalog-grid { display: grid; grid-template-columns: minmax(0, 1fr) 360px; gap: 24px; align-items: start; }
+.checkout-grid { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 24px; align-items: start; }
+.catalog-grid > *, .checkout-grid > * { min-width: 0; }
+.search-row { display: flex; gap: 18px; align-items: center; padding: 12px 24px 24px; }
+.search-row span { font-size: 12px; white-space: nowrap; color: #59687b; }
+.spaced-label { margin-top: 22px; }
+.form-actions { display: flex; gap: 12px; margin-top: 28px; }
+.actions { display: flex; gap: 12px; }
+.text-button { background: transparent; color: #184dba; padding: 10px 8px; min-height: 44px; font-size: 13px; }
+.text-button.danger { color: #b53731; }
+.status.enabled { color: #246653; background: #e8f5f1; }
+.cart-line { display: grid; grid-template-columns: minmax(0, 1fr) 84px 120px; gap: 16px; align-items: center; margin: 0 24px; padding: 24px 0; border-bottom: 1px solid #e0e6ef; }
+.cart-line strong { overflow-wrap: anywhere; }
+.cart-line p { margin-bottom: 0; }
+.quantity-control label { font-size: 12px; color: #59687b; }
+.line-amount { display: flex; flex-direction: column; align-items: flex-end; font-size: 14px; }
+.checkout-total { display: flex; justify-content: space-between; gap: 16px; align-items: center; padding: 30px 24px; }
+.checkout-total span { color: #59687b; font-size: 14px; }
+.checkout-total strong { color: #184dba; font-size: 27px; font-variant-numeric: tabular-nums; overflow-wrap: anywhere; }
+.checkout-submit { padding: 0 24px 22px; }
+.checkout-submit .form-hint { border: 0; padding-top: 0; }
+.order-heading { display: flex; gap: 8px; align-items: center; }
+.order-heading .item-name { max-width: 380px; font-size: 13px; }
+.expand-button { background: transparent; color: #184dba; min-width: 44px; min-height: 44px; font-size: 21px; }
+.expandable-order { cursor: pointer; }
+.expandable-order:hover { background: #f8fafc; }
+.detail-row > td { padding: 0 24px 20px !important; }
+.detail-content { background: #f8fafc; border-radius: 6px; padding: 20px; }
+.detail-heading { display: flex; gap: 20px; justify-content: space-between; margin-bottom: 16px; }
+.detail-heading span { color: #59687b; font-size: 12px; }
+.detail-content table th, .detail-content table td { padding: 13px 8px; }
+.detail-content table td { white-space: normal; }
+.catalog-grid table { min-width: 680px; }
+.catalog-grid td:first-child { min-width: 180px; }
+.checkout-grid table { min-width: 520px; }
+.order-table { min-width: 980px; }
+.detail-content table { min-width: 640px; }
+@media (max-width: 1050px) { .catalog-grid, .checkout-grid { grid-template-columns: minmax(0, 1fr); } }
+@media (max-width: 600px) { .topbar { gap: 18px; } .brand { font-size: 16px; gap: 8px; } .main-nav { gap: 14px; font-size: 14px; } .page-intro { gap: 16px; align-items: flex-start; } .page-intro .compact { min-width: 100px; } .cart-line { grid-template-columns: minmax(0, 1fr) 76px; } .line-amount { grid-column: 1 / -1; flex-direction: row; justify-content: space-between; } .checkout-total { flex-wrap: wrap; } .detail-heading { flex-direction: column; gap: 8px; } }

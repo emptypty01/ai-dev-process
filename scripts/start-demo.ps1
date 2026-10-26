@@ -1,8 +1,12 @@
-param([switch]$Build)
+param(
+    [switch]$Build,
+    [string]$LogDirectory = 'D:/plan&exec&test/20261024-AI研发流程本地平台/log'
+)
 $ErrorActionPreference = 'Stop'
 $projectRoot = Split-Path -Parent $PSScriptRoot
 $platformRoot = 'D:/docker/ai-dev-platform'
-$processLog = 'D:/plan&exec&test/20261024-AI研发流程本地平台/log'
+$processLog = [System.IO.Path]::GetFullPath($LogDirectory)
+New-Item -ItemType Directory -Path $processLog -Force | Out-Null
 $localDir = Join-Path $projectRoot '.local'
 New-Item -ItemType Directory -Path $localDir -Force | Out-Null
 function Get-EnvValue([string]$Name) {

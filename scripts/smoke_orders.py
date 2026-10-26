@@ -23,18 +23,19 @@ def main():
             assert response.status == expected, f"{method} {path}: {response.status}, expected {expected}"
             return json.loads(response.read(), parse_float=Decimal)
     assert call("/health")["status"] == "UP"
-    order = call("/orders", "POST", {"itemName": "演示机械键盘", "quantity": 3, "unitPrice": "19.90"}, 201)
-    assert order["totalAmount"] == Decimal("59.70") and order["status"] == "NEW"
-    call("/orders", "POST", {"itemName": " ", "quantity": 1, "unitPrice": "1.00"}, 400)
-    call("/orders", "POST", {"itemName": "非法数量", "quantity": 0, "unitPrice": "1.00"}, 400)
-    call("/orders", "POST", {"itemName": "小数数量", "quantity": 1.5, "unitPrice": "1.00"}, 400)
-    call("/orders", "POST", {"itemName": "非法金额", "quantity": 1, "unitPrice": "1.001"}, 400)
+    product = call("/products", "POST", {"type": "演示商品", "name": "演示机械键盘", "price": "19.90"}, 201)
+    order = call("/orders", "POST", {"items": [{"productId": product["id"], "quantity": 3}]}, 201)
+    assert Decimal(order["totalAmount"]) == Decimal("59.70") and order["status"] == "NEW"
+    call("/orders", "POST", {"items": []}, 400)
+    call("/orders", "POST", {"items": [{"productId": product["id"], "quantity": 0}]}, 400)
+    call("/orders", "POST", {"items": [{"productId": product["id"], "quantity": 1.5}]}, 400)
+    call("/products", "POST", {"type": "演示商品", "name": "非法金额", "price": "1.001"}, 400)
     assert any(item["id"] == order["id"] for item in call("/orders"))
     first = call(f"/orders/{order['id']}/cancel", "POST")
     second = call(f"/orders/{order['id']}/cancel", "POST")
     assert first == second and first["status"] == "CANCELLED"
     call("/orders/9223372036854775807/cancel", "POST", expected=404)
-    concurrent = call("/orders", "POST", {"itemName": "并发取消演示", "quantity": 1, "unitPrice": "10.00"}, 201)
+    concurrent = call("/orders", "POST", {"items": [{"productId": product["id"], "quantity": 1}]}, 201)
     with ThreadPoolExecutor(max_workers=8) as pool:
         results = list(pool.map(lambda _: call(f"/orders/{concurrent['id']}/cancel", "POST"), range(8)))
     assert all(item == results[0] and item["status"] == "CANCELLED" for item in results)

@@ -16,3 +16,4 @@ spring:
     time-zone: UTC
     deserialization:
       accept-float-as-int: false
+      fail-on-unknown-properties: true

@@ -9,6 +9,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 
 import java.math.BigDecimal;
 import java.time.Instant;
+import java.util.List;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.webmvc.test.autoconfigure.WebMvcTest;
@@ -20,27 +21,29 @@ import org.springframework.test.web.servlet.MockMvc;
 class OrderRequestTest {
     @Autowired
     private MockMvc mvc;
-
     @MockitoBean
     private OrderService service;
 
     @Test
-    void rejectsFractionalQuantityBeforeBusinessInvocation() throws Exception {
-        mvc.perform(post("/api/orders").contentType(MediaType.APPLICATION_JSON)
-                        .content("{\"itemName\":\"键盘\",\"quantity\":1.5,\"unitPrice\":10.00}"))
-                .andExpect(status().isBadRequest())
-                .andExpect(jsonPath("$.message").exists());
+    void rejectsInvalidItemsAndClientPricesBeforeBusinessInvocation() throws Exception {
+        for (String body : List.of("{}", "{\"items\":[]}", "{\"items\":[null]}",
+                "{\"items\":[{\"productId\":1,\"quantity\":1.5}]}",
+                "{\"items\":[{\"productId\":1,\"quantity\":0}]}",
+                "{\"items\":[{\"productId\":1,\"quantity\":1,\"unitPrice\":0.01}]}",
+                "{\"itemName\":\"键盘\",\"quantity\":1,\"unitPrice\":10.00}")) {
+            mvc.perform(post("/api/orders").contentType(MediaType.APPLICATION_JSON).content(body))
+                    .andExpect(status().isBadRequest()).andExpect(jsonPath("$.message").exists());
+        }
         verifyNoInteractions(service);
     }
 
     @Test
-    void acceptsIntegerQuantity() throws Exception {
-        OrderItem order = new OrderItem(1L, "OD-request", "键盘", 1, new BigDecimal("10.00"), new BigDecimal("10.00"),
-                "NEW", Instant.EPOCH);
-        when(service.create(any())).thenReturn(order);
+    void acceptsProductItemsAndSerializesMoneyAsDecimalStrings() throws Exception {
+        when(service.create(any())).thenReturn(new OrderDetail(1L, "OD-request", 1, 2, new BigDecimal("598.00"),
+                "NEW", Instant.EPOCH, List.of()));
         mvc.perform(post("/api/orders").contentType(MediaType.APPLICATION_JSON)
-                        .content("{\"itemName\":\"键盘\",\"quantity\":1,\"unitPrice\":10.00}"))
-                .andExpect(status().isCreated())
-                .andExpect(jsonPath("$.quantity").value(1));
+                        .content("{\"items\":[{\"productId\":1,\"quantity\":2}]}"))
+                .andExpect(status().isCreated()).andExpect(jsonPath("$.totalAmount").value("598.00"))
+                .andExpect(jsonPath("$.totalQuantity").value(2));
     }
 }

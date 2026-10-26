@@ -1,0 +1,6 @@
+interface:
+  display_name: "团队 AI 研发全流程"
+  short_description: "把已聊需求自动整理为设计与 Penpot 原型，确认后推进开发、定向测试及授权发布"
+  default_prompt: "使用 $team-ai-workflow，把刚才聊的需求按流程推进。"
+policy:
+  allow_implicit_invocation: true

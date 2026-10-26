@@ -3,6 +3,7 @@ package local.aiworkflow.order;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyList;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
@@ -11,38 +12,60 @@ import static org.mockito.Mockito.when;
 
 import java.math.BigDecimal;
 import java.time.Instant;
+import java.util.List;
 import java.util.Optional;
+import local.aiworkflow.product.Product;
+import local.aiworkflow.product.ProductRepository;
 import org.junit.jupiter.api.Test;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.server.ResponseStatusException;
 
 class OrderServiceTest {
     private final OrderRepository repository = mock(OrderRepository.class);
-    private final OrderService service = new OrderService(repository);
+    private final ProductRepository products = mock(ProductRepository.class);
+    private final OrderService service = new OrderService(repository, products);
 
     @Test
-    void createsOrderWithExactDecimalAmountAndTrimmedName() {
-        when(repository.create(any(), eq("机械键盘"), eq(3), eq(new BigDecimal("19.90")), eq(new BigDecimal("59.70"))))
-                .thenReturn(order("NEW"));
-        assertThat(service.create(new CreateOrderRequest("  机械键盘  ", 3, new BigDecimal("19.90"))).status()).isEqualTo("NEW");
+    void createsConfiguredSnapshotsWithExactTotal() {
+        when(products.findByIdForUpdate(1)).thenReturn(Optional.of(product(1, "机械键盘", "299.00", true)));
+        when(products.findByIdForUpdate(2)).thenReturn(Optional.of(product(2, "无线鼠标", "89.00", true)));
+        when(repository.create(any(), any(), anyList())).thenReturn(1L);
+        when(repository.findById(1)).thenReturn(Optional.of(order("NEW")));
+        when(repository.findLines(1)).thenReturn(List.of());
+        service.create(new CreateOrderRequest(List.of(new OrderLineRequest(2L, 1), new OrderLineRequest(1L, 2))));
+        verify(repository).create(any(), eq(new BigDecimal("687.00")), eq(List.of(
+                new OrderLine(1L, "机械键盘", "办公设备", new BigDecimal("299.00"), 2, new BigDecimal("598.00"), "CATALOG"),
+                new OrderLine(2L, "无线鼠标", "办公设备", new BigDecimal("89.00"), 1, new BigDecimal("89.00"), "CATALOG"))));
     }
 
     @Test
-    void rejectsBlankItemName() {
-        assertBadRequest(new CreateOrderRequest("  ", 1, new BigDecimal("1.00")));
+    void mergesDuplicateProductsBeforePricing() {
+        when(products.findByIdForUpdate(1)).thenReturn(Optional.of(product(1, "键盘", "0.10", true)));
+        when(repository.create(any(), any(), anyList())).thenReturn(1L);
+        when(repository.findById(1)).thenReturn(Optional.of(order("NEW")));
+        when(repository.findLines(1)).thenReturn(List.of());
+        service.create(new CreateOrderRequest(List.of(new OrderLineRequest(1L, 1), new OrderLineRequest(1L, 2))));
+        verify(repository).create(any(), eq(new BigDecimal("0.30")), eq(List.of(
+                new OrderLine(1L, "键盘", "办公设备", new BigDecimal("0.10"), 3, new BigDecimal("0.30"), "CATALOG"))));
     }
 
     @Test
-    void rejectsOutOfRangeQuantity() {
-        assertBadRequest(new CreateOrderRequest("键盘", 0, new BigDecimal("1.00")));
-        assertBadRequest(new CreateOrderRequest("键盘", 1001, new BigDecimal("1.00")));
+    void rejectsUnavailableProductsWithoutCreatingPartialOrder() {
+        when(products.findByIdForUpdate(1)).thenReturn(Optional.of(product(1, "键盘", "1.00", true)));
+        when(products.findByIdForUpdate(2)).thenReturn(Optional.of(product(2, "鼠标", "1.00", false)));
+        assertBadRequest(new CreateOrderRequest(List.of(new OrderLineRequest(1L, 1), new OrderLineRequest(2L, 1))));
+        when(products.findByIdForUpdate(2)).thenReturn(Optional.empty());
+        assertBadRequest(new CreateOrderRequest(List.of(new OrderLineRequest(1L, 1), new OrderLineRequest(2L, 1))));
+        verify(repository, never()).create(any(), any(), anyList());
     }
 
     @Test
-    void rejectsInvalidPriceAndExcessivePrecision() {
-        assertBadRequest(new CreateOrderRequest("键盘", 1, new BigDecimal("0.00")));
-        assertBadRequest(new CreateOrderRequest("键盘", 1, new BigDecimal("1.001")));
-        assertBadRequest(new CreateOrderRequest("键盘", 1, new BigDecimal("100000000")));
+    void rejectsEmptyAndInvalidOrCombinedQuantities() {
+        assertBadRequest(new CreateOrderRequest(List.of()));
+        assertBadRequest(new CreateOrderRequest(List.of(new OrderLineRequest(1L, 0))));
+        assertBadRequest(new CreateOrderRequest(List.of(new OrderLineRequest(1L, 1001))));
+        assertBadRequest(new CreateOrderRequest(List.of(new OrderLineRequest(1L, 1000), new OrderLineRequest(1L, 1))));
+        verify(repository, never()).create(any(), any(), anyList());
     }
 
     @Test
@@ -62,8 +85,8 @@ class OrderServiceTest {
 
     @Test
     void missingOrderReturnsNotFound() {
-        when(repository.findByIdForUpdate(99)).thenReturn(Optional.empty());
-        assertThatThrownBy(() -> service.cancel(99)).isInstanceOfSatisfying(ResponseStatusException.class,
+        when(repository.findById(99)).thenReturn(Optional.empty());
+        assertThatThrownBy(() -> service.detail(99)).isInstanceOfSatisfying(ResponseStatusException.class,
                 exception -> assertThat(exception.getStatusCode()).isEqualTo(HttpStatus.NOT_FOUND));
     }
 
@@ -72,7 +95,11 @@ class OrderServiceTest {
                 exception -> assertThat(exception.getStatusCode()).isEqualTo(HttpStatus.BAD_REQUEST));
     }
 
-    private OrderItem order(String status) {
-        return new OrderItem(1L, "OD-demo", "机械键盘", 3, new BigDecimal("19.90"), new BigDecimal("59.70"), status, Instant.EPOCH);
+    private Product product(long id, String name, String price, boolean enabled) {
+        return new Product(id, "办公设备", name, new BigDecimal(price), enabled, Instant.EPOCH, Instant.EPOCH);
+    }
+
+    private OrderSummary order(String status) {
+        return new OrderSummary(1L, "OD-demo", 2, 3, new BigDecimal("687.00"), status, Instant.EPOCH);
     }
 }
